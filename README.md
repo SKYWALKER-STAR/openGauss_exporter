@@ -1,6 +1,6 @@
-> Usage: Prometheus exporter Readme文件 
-> Create Date: 2024/01/16 
-> Authro: ming 
+Usage: Prometheus exporter Readme文件  
+Create Date: 2024/01/16  
+Authro: ming   
 
 ### 0.介绍
 ---
