@@ -16,7 +16,7 @@ func main() {
 	db.Connect()
 	//obj := db.GetConn()
 
-	m := exporter.CreateTestMetrics("Test","This is test help")
+	m := exporter.CreateTemplateMetrics("Test","This is test help")
 	m.Register()
 	m.SetCpuTemp(129)
 

@@ -1,16 +1,11 @@
 package exporter
 
 import (
-	_ "fmt"
 	_ "log"
 	_ "dbmanager"
 	"github.com/prometheus/client_golang/prometheus"
 	_ "github.com/prometheus/client_golang/prometheus/promhttp"
 )
-
-type metrics_operation interface {
-	Register()
-}
 
 type TestMetrics struct {
 	cpuTemp		prometheus.Gauge
@@ -39,3 +34,4 @@ func CreateTestMetrics(name string,help string) *TestMetrics {
 	}
 	
 }
+
