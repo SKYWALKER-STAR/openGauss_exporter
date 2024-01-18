@@ -2,7 +2,7 @@ module client
 
 go 1.20
 
-require metrics v0.0.0
+require dbmanager v0.0.0
 
 require exporter v0.0.0
 
@@ -24,5 +24,7 @@ require (
 )
 
 replace metrics => ../metrics
+
+replace dbmanager => ../gaussDBManager
 
 replace exporter => ../gaussExporter
