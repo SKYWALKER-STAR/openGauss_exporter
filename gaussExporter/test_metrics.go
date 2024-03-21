@@ -32,6 +32,5 @@ func CreateTestMetrics(name string,help string) *TestMetrics {
 			Help: help,
 		}),
 	}
-	
 }
 

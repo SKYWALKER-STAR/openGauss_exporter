@@ -3,6 +3,7 @@ package exporter
 import (
 	_ "log"
 	_ "dbmanager"
+	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	_ "github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -25,6 +26,10 @@ func (t *TemplateMetrics) GetRegistry() *prometheus.Registry {
 	return t.registry
 }
 
+func (t *TemplateMetrics) GetDataType() {
+	fmt.Printf("%T\n",t.cpuTemp)
+}
+
 func CreateTemplateMetrics(name string,help string) *TemplateMetrics {
 	return &TemplateMetrics {
 		cpuTemp: prometheus.NewGauge(prometheus.GaugeOpts {
@@ -32,5 +37,4 @@ func CreateTemplateMetrics(name string,help string) *TemplateMetrics {
 			Help: help,
 		}),
 	}
-	
 }
