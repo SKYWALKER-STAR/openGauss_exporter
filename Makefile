@@ -1,4 +1,3 @@
-.PHONY all
 
 all:
 	go build client/gaussdb_exporter.go
