@@ -16,7 +16,7 @@ import (
 	_ "github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
 	"github.com/prometheus/exporter-toolkit/web"
-	_ "github.com/prometheus/exporter-toolkit/web/kingpinflag"
+	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 
 	"collector"
 
@@ -52,17 +52,7 @@ var (
 		"Ignore certificate and server verification when using a tls connection.",
 	).Bool()
 
-	address []string
-
-	socket bool
-
-	file string
-
-	toolkitFlags = &web.FlagConfig {
-		WebListenAddresses: &address,
-		WebSystemdSocket: &socket,
-		WebConfigFile: &file,
-	}
+	toolkitFlags = webflag.AddFlags(kingpin.CommandLine,":9194")
 )
 
 var scrapers = map[collector.Scraper]bool {
