@@ -133,6 +133,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 // scrape collects metrics from the target, returns an up metric value.
 func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) float64 {
+	/*
 	var err error
 	scrapeTime := time.Now()
 	db, err := sql.Open("gauss", e.dsn)
@@ -156,12 +157,15 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) floa
 	ch <- prometheus.MustNewConstMetric(gaussScrapeDurationSeconds, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "connection")
 
 	version := getGaussDBVersion(db, e.logger)
+	*/
 	var wg sync.WaitGroup
 	defer wg.Wait()
 	for _, scraper := range e.scrapers {
+		/*
 		if version < scraper.Version() {
 			continue
 		}
+		*/
 
 		wg.Add(1)
 		go func(scraper Scraper) {
@@ -169,7 +173,7 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) floa
 			label := "collect." + scraper.Name()
 			scrapeTime := time.Now()
 			collectorSuccess := 1.0
-			if err := scraper.Scrape(ctx, db, ch, log.With(e.logger, "scraper", scraper.Name())); err != nil {
+			if err := scraper.Scrape(ctx, nil, ch, log.With(e.logger, "scraper", scraper.Name())); err != nil {
 				//level.Error(e.logger).Log("msg", "Error from scraper", "scraper", scraper.Name(), "target", e.getTargetFromDsn(), "err", err)
 				collectorSuccess = 0.0
 			}

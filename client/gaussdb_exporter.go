@@ -57,6 +57,7 @@ var (
 
 var scrapers = map[collector.Scraper]bool {
 	collector.TemplateMetrics{}:			true,
+	collector.TestMetrics{}:			true,
 }
 
 func filterScrapers(scrapers []collector.Scraper, collectParams []string) []collector.Scraper {

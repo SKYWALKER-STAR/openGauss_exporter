@@ -1,36 +1,46 @@
 package collector
 
 import (
-	_ "log"
+	"context"
+	"database/sql"
+
 	_ "dbmanager"
+
+	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
-	_ "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type TestMetrics struct {
-	cpuTemp		prometheus.Gauge
-	registry	*prometheus.Registry
+
+const (
+	test_metrics = "testForFun"
+)
+
+var (
+	gausstest = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace,test_metrics,"Second"),
+		"This is just for fun",
+		[]string{},
+		nil,
+	)
+)
+type TestMetrics struct {}
+
+func (TestMetrics) Name() string {
+	return "testForFun"
 }
 
-func (t *TestMetrics) Register() {
-	t.registry = prometheus.NewRegistry()
-	t.registry.MustRegister(t.cpuTemp)
+func (TestMetrics) Help() string {
+	return "This is test for fun"
 }
 
-func (t *TestMetrics) SetCpuTemp(number float64) {
-	t.cpuTemp.Set(number)
+func (TestMetrics) Version() float64 {
+	return 1.0
 }
 
-func (t *TestMetrics) GetRegistry() *prometheus.Registry {
-	return t.registry
-}
+func (TestMetrics) Scrape(ctx context.Context,db *sql.DB,ch chan <- prometheus.Metric,logger log.Logger) error {
+	ch <- prometheus.MustNewConstMetric(
+		gausstest,prometheus.GaugeValue,5127,
+	)
 
-func CreateTestMetrics(name string,help string) *TestMetrics {
-	return &TestMetrics {
-		cpuTemp: prometheus.NewGauge(prometheus.GaugeOpts {
-			Name: name,
-			Help: help,
-		}),
-	}
+	return nil
 }
-
