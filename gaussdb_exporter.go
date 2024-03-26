@@ -58,6 +58,7 @@ var (
 var scrapers = map[collector.Scraper]bool {
 	collector.TemplateMetrics{}:			true,
 	collector.TestMetrics{}:			true,
+	collector.PGRolesCollector{}:			true,
 }
 
 func filterScrapers(scrapers []collector.Scraper, collectParams []string) []collector.Scraper {
