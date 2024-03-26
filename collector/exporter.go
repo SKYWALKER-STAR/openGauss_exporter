@@ -26,7 +26,7 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	_ "github.com/lib/pq"
+	_ "gitee.com/opengauss/openGauss-connector-go-pq"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -133,10 +133,12 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 // scrape collects metrics from the target, returns an up metric value.
 func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) float64 {
-	/*
 	var err error
 	scrapeTime := time.Now()
-	db, err := sql.Open("gauss", e.dsn)
+
+	str := "opengauss://exporter:7erMtAlaN3mXmfKwhUcY&@127.0.0.1:5432/postgres?sslmode=disable"
+	db, err := sql.Open("opengauss", str)
+
 	if err != nil {
 		level.Error(e.logger).Log("msg", "Error opening connection to database", "err", err)
 		return 0.0
@@ -157,15 +159,12 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) floa
 	ch <- prometheus.MustNewConstMetric(gaussScrapeDurationSeconds, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "connection")
 
 	version := getGaussDBVersion(db, e.logger)
-	*/
 	var wg sync.WaitGroup
 	defer wg.Wait()
 	for _, scraper := range e.scrapers {
-		/*
 		if version < scraper.Version() {
 			continue
 		}
-		*/
 
 		wg.Add(1)
 		go func(scraper Scraper) {
