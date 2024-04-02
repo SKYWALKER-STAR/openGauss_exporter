@@ -59,6 +59,22 @@ var scrapers = map[collector.Scraper]bool {
 	collector.TemplateMetrics{}:			true,
 	collector.TestMetrics{}:			true,
 	collector.PGRolesCollector{}:			true,
+	collector.PGDatabaseCollector{}:		true,
+	collector.PGLocksCollector{}:			true,
+	collector.PGLongRunningTransactionsCollector{}:	true,
+	collector.PGPostmasterCollector{}:		true,
+	collector.PGReplicationCollector{}:		true,
+	collector.PGReplicationSlotCollector{}:		true,
+	collector.PGStatActivityAutovacuumCollector{}:	true,
+	collector.PGStatBGWriterCollector{}:		true,
+	collector.PGStatDatabaseCollector{}:		true,
+	collector.PGStatioUserIndexesCollector{}:	true,
+	collector.PGStatIOUserTablesCollector{}:	true,
+	collector.PGStatStatementsCollector{}:		true,
+	collector.PGStatUserTablesCollector{}:		true,
+	collector.PGStatWalReceiverCollector{}:		true,
+	collector.PGXlogLocationCollector{}:		true,
+
 }
 
 func filterScrapers(scrapers []collector.Scraper, collectParams []string) []collector.Scraper {

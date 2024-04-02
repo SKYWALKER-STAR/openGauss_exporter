@@ -53,7 +53,7 @@ func (PGRolesCollector) Version() float64 {
 	return 1.0
 }
 
-// Update implements Collector and exposes roles connection limits.
+// Scrape implements Collector and exposes roles connection limits.
 // It is called by the Prometheus registry when collecting metrics.
 func (PGRolesCollector) Scrape(ctx context.Context,db *sql.DB,ch chan <- prometheus.Metric,logger log.Logger) error {
 	// Query the list of databases
