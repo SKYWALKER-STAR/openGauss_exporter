@@ -19,6 +19,7 @@ import (
 	webflag "github.com/prometheus/exporter-toolkit/web/kingpinflag"
 
 	"collector"
+	"config"
 
 )
 
@@ -33,10 +34,10 @@ var (
 		"Offset to subtract from timeout in seconds.",
 	).Default("0.25").Float64()
 
-	configGauss = kingpin.Flag(
-		"config.gaussDB-cnf",
-		"Path to .gaussDB.cnf file to read MySQL credentials from.",
-	).Default(".gaussDB.cnf").String()
+	configGaussDB = kingpin.Flag(
+		"config.gaussDB.yaml",
+		"Path to .gaussDB.yaml file to read GaussDB credentials from.",
+	).Default(".gaussDB.yaml").String()
 
 	gaussDBAddress = kingpin.Flag(
 		"gaussDB.address",
@@ -52,12 +53,13 @@ var (
 		"Ignore certificate and server verification when using a tls connection.",
 	).Bool()
 
-	toolkitFlags = webflag.AddFlags(kingpin.CommandLine,":9194")
+	toolkitFlags = webflag.AddFlags(kingpin.CommandLine, ":9194")
+	c            = config.Handler{
+		Config: &config.Config{},
+	}
 )
 
 var scrapers = map[collector.Scraper]bool {
-	collector.TemplateMetrics{}:			true,
-	collector.TestMetrics{}:			true,
 	collector.PGRolesCollector{}:			true,
 	collector.PGDatabaseCollector{}:		true,
 	collector.PGLocksCollector{}:			true,
@@ -105,18 +107,26 @@ func init() {
 
 func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var dsn string
+		var dsn config.DSN
+		var err error
 		q := r.URL.Query()
-		/*
 		var target string
 		target = ""
 		if q.Has("target") {
 			target = q.Get("target")
 		}
-		*/
+		cfg := c.GetConfig()
+		level.Info(logger).Log("Ming",cfg.AuthModules["client"].UserPass.Username)
+		cfgauthmodule, ok := cfg.AuthModules["client"]
+		if !ok {
+			level.Error(logger).Log("msg", "Failed to parse section [client] from config file", "err", err)
+		}
+		if dsn, err = cfgauthmodule.ConfigureTarget(target); err != nil {
+			level.Error(logger).Log("msg", "Failed to form dsn from section [client]", "err", err)
+		}
 
+		level.Info(logger).Log("Ming",dsn.String())
 		collect := q["collect[]"]
-
 		// Use request context for cancellation when connection gets closed.
 		ctx := r.Context()
 		// If a timeout is configured via the Prometheus header, add it to the context.
@@ -145,7 +155,7 @@ func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFun
 
 		registry := prometheus.NewRegistry()
 
-		registry.MustRegister(collector.New(ctx, dsn, filteredScrapers, logger))
+		registry.MustRegister(collector.New(ctx, dsn.String(), filteredScrapers, logger))
 
 		gatherers := prometheus.Gatherers{
 			prometheus.DefaultGatherer,
@@ -182,6 +192,12 @@ func main() {
 
 	level.Info(logger).Log("msg","Starting gaussDB_exporter","version",version.Info())
 	level.Info(logger).Log("msg","Build context","build_context",version.BuildContext())
+
+	var err error
+	if err = c.ReloadConfig(*configGaussDB,logger); err != nil {
+		level.Info(logger).Log("msg", "Error parsing host config", "file", *configGaussDB, "err", err)
+		os.Exit(1)
+	}
 
 	// Register only scrapers enabled by flag.
 	enabledScrapers := []collector.Scraper{}
