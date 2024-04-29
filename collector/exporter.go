@@ -139,7 +139,7 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) floa
 
 	//str := "opengauss://exporter:7erMtAlaN3mXmfKwhUcY&@127.0.0.1:5432/postgres?sslmode=disable"
 	//str := "opengauss://root:eo!9Fs@=5Av@172.18.82.22:8000,172.18.82.32:8000,172.18.82.244:8000/postgres?sslmode=disable"
-	level.Error(e.logger).Log("AAA",e.dsn)
+	level.Error(e.logger).Log("msg","connecting",e.dsn)
 	db, err := sql.Open("opengauss", e.dsn)
 
 	if err != nil {

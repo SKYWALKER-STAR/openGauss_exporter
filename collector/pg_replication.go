@@ -70,7 +70,7 @@ func (PGReplicationCollector) Version() float64 {
 	return 1.0
 }
 
-func (PGReplicationCollector) Scrape(ctx context.Context, db *sql.DB, ch chan<- prometheus.Metric,logger log.Logger) error {
+func (PGReplicationCollector) Scrape(ctx context.Context, db *sql.DB, ch chan<- prometheus.Metric, logger log.Logger) error {
 	row := db.QueryRowContext(ctx,
 		pgReplicationQuery,
 	)

@@ -20,6 +20,7 @@ import (
 
 	"collector"
 	"config"
+	"myutils"
 
 )
 
@@ -54,9 +55,11 @@ var (
 	).Bool()
 
 	toolkitFlags = webflag.AddFlags(kingpin.CommandLine, ":9194")
+
 	c            = config.Handler{
 		Config: &config.Config{},
 	}
+
 )
 
 var scrapers = map[collector.Scraper]bool {
@@ -101,6 +104,7 @@ func filterScrapers(scrapers []collector.Scraper, collectParams []string) []coll
 	return filteredScrapers
 }
 
+
 func init() {
 	prometheus.MustRegister(version.NewCollector("gaussDB_exporter"))
 }
@@ -116,7 +120,7 @@ func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFun
 			target = q.Get("target")
 		}
 		cfg := c.GetConfig()
-		level.Info(logger).Log("Ming",cfg.AuthModules["client"].UserPass.Username)
+		level.Info(logger).Log("config",cfg.AuthModules["client"].UserPass.Username)
 		cfgauthmodule, ok := cfg.AuthModules["client"]
 		if !ok {
 			level.Error(logger).Log("msg", "Failed to parse section [client] from config file", "err", err)
@@ -125,7 +129,6 @@ func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFun
 			level.Error(logger).Log("msg", "Failed to form dsn from section [client]", "err", err)
 		}
 
-		level.Info(logger).Log("Ming",dsn.String())
 		collect := q["collect[]"]
 		// Use request context for cancellation when connection gets closed.
 		ctx := r.Context()
@@ -167,9 +170,10 @@ func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFun
 	}
 }
 
-func main() {
-	scraperFlags := map[collector.Scraper] *bool{}
 
+func main() {
+
+	scraperFlags := map[collector.Scraper] *bool{}
 	for scraper,enableByDefault := range scrapers {
 		defaultOn := "false"
 		if enableByDefault {
@@ -190,14 +194,45 @@ func main() {
 	kingpin.Parse()
 	logger := promlog.New(promlogConfig)
 
+	if fi,err := os.Stat("HISTORY");err == nil || os.IsExist(err) {
+		level.Info(logger).Log("监测到HISTORY文件，执行新模式")
+
+		if fi.Size() < 1 {
+			level.Error(logger).Log("HISTORY文件是空的，部署有问题，无法继续")
+			os.Exit(1)
+		}
+
+		target_info := myutils.CheckInstall((*(*toolkitFlags).WebListenAddresses)[0])
+		level.Error(logger).Log("加载参数: URI: %v,\n","openguass://" + target_info.User + ":****@" + target_info.Host + ":" + target_info.Port + "/admin")
+
+		var options map[string]string
+		options = make(map[string]string)
+
+		options["sslmode"]="disable"
+
+		configFile := c.InitFromUrl(target_info.User,target_info.Password,target_info.Database,target_info.Port,target_info.Host,options)
+		c.WriteConfigFile(configFile,*configGaussDB)
+
+		var err error
+		if err = c.ReloadConfig(*configGaussDB,logger); err != nil {
+			level.Info(logger).Log("msg", "Error parsing host config", "file", *configGaussDB, "err", err)
+		}
+
+	} else {
+		level.Error(logger).Log("未监测到部署文件，不做任何改动，当前行为与官方包一致")
+
+		var err error
+		if err = c.ReloadConfig(*configGaussDB,logger); err != nil {
+			level.Info(logger).Log("msg", "Error parsing host config", "file", *configGaussDB, "err", err)
+		}
+	}
+
+	level.Info(logger).Log("Debug","Hello world")
+
+
+
 	level.Info(logger).Log("msg","Starting gaussDB_exporter","version",version.Info())
 	level.Info(logger).Log("msg","Build context","build_context",version.BuildContext())
-
-	var err error
-	if err = c.ReloadConfig(*configGaussDB,logger); err != nil {
-		level.Info(logger).Log("msg", "Error parsing host config", "file", *configGaussDB, "err", err)
-		os.Exit(1)
-	}
 
 	// Register only scrapers enabled by flag.
 	enabledScrapers := []collector.Scraper{}

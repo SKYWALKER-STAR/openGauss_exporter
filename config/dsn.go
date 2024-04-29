@@ -27,6 +27,7 @@ type DSN struct {
 	username string
 	password string
 	host     string
+	port	 string
 	path     string
 	database string
 	query    url.Values
@@ -45,7 +46,7 @@ func (d DSN) String() string {
 	}
 	*/
 
-	return fmt.Sprintf("%s://%s:%s@%s/%s?%s", d.scheme, d.username, d.password, d.host, d.database, d.query.Encode())
+	return fmt.Sprintf("%s://%s:%s@%s:%s/%s?%s", d.scheme, d.username, d.password, d.host, d.port, d.database, d.query.Encode())
 	//return fmt.Sprintf("%s://%s%s?%s", d.scheme, d.host, d.path, d.query.Encode())
 }
 

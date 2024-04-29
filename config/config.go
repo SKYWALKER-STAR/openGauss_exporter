@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"io/ioutil"
 
 	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,6 +55,7 @@ type UserPass struct {
 	Password string `yaml:"password"`
 	DataBase string `yaml:"database"`
 	Hosts	 string `yaml:"hosts"`
+	Port 	 string `yaml:"port"`
 }
 
 type Handler struct {
@@ -97,6 +99,71 @@ func (ch *Handler) ReloadConfig(f string, logger log.Logger) error {
 	return nil
 }
 
+func (ch *Handler) WriteConfigFile(tgi Config,filepath string) int {
+
+	data,err := yaml.Marshal(tgi)
+	if err != nil {
+		panic(err)
+		return -1
+	}
+
+	err = ioutil.WriteFile(filepath,data,0777)
+	if err != nil {
+		panic(err)
+		return -1
+	}
+
+	fmt.Println(tgi)
+
+	return 0
+
+}
+
+func (ch *Handler) InitConfig(auth map[string]AuthModule) Config {
+	config := Config {
+		AuthModules: auth,
+	}
+
+	return config
+}
+
+func (ch *Handler) InitAuthModule(Type string,UserPass UserPass,Options map[string]string) AuthModule {
+	auth := AuthModule {
+		Type: Type,
+		UserPass: UserPass,
+		Options: Options,
+	}
+
+	return auth
+}
+
+func (ch *Handler) InitUserPass(username string,password string,database string,hosts string,port string) UserPass {
+	userpass := UserPass {
+		Username: username,
+		Password: password,
+		DataBase: database,
+		Hosts:	hosts,
+		Port:	port,
+	}
+
+	return userpass
+}
+
+func (ch *Handler) InitFromUrl(username string, password string, database string, port string, hosts string, options map[string]string) Config {
+
+	var authlist map[string]AuthModule
+
+	authlist = make(map[string]AuthModule)
+
+	userPass := ch.InitUserPass(username,password,database,hosts,port)
+	authmodule := ch.InitAuthModule("userpass",userPass,options)
+
+	authlist["client"]=authmodule
+	configFile := ch.InitConfig(authlist)
+
+	return configFile
+}
+
 func (m AuthModule) ConfigureTarget(target string) (DSN, error) {
 	dsn, err := dsnFromString(target)
 	if err != nil {
@@ -120,6 +187,10 @@ func (m AuthModule) ConfigureTarget(target string) (DSN, error) {
 		if m.UserPass.Hosts != "" {
 			dsn.host = m.UserPass.Hosts
 		}
+
+		if m.UserPass.Port != "" {
+			dsn.port = m.UserPass.Port
+		}
 	}
 
 	for k, v := range m.Options {
@@ -128,3 +199,4 @@ func (m AuthModule) ConfigureTarget(target string) (DSN, error) {
 
 	return dsn, nil
 }
+

@@ -5,6 +5,7 @@ go 1.21.5
 require (
 	collector v0.0.0-00010101000000-000000000000
 	config v0.0.0
+	myutils v0.0.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/go-kit/log v0.2.1
 	github.com/prometheus/client_golang v1.19.0
@@ -47,3 +48,5 @@ replace collector => ./collector
 replace kingpin => ./kingpin
 
 replace config => ./config
+
+replace myutils => ./myutils
