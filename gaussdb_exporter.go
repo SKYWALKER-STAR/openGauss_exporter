@@ -28,7 +28,7 @@ var (
 	metricsPath = kingpin.Flag(
 		"web.telemetry-path",
 		"Path under which to expose metrics.",
-	).Default("/metrics").String()
+	).Default("/gaussdb/metrics").String()
 
 	timeoutOffset = kingpin.Flag(
 		"timeout-offset",
@@ -244,6 +244,8 @@ func main() {
 	}
 	handlerFunc := newHandler(enabledScrapers, logger)
 	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, handlerFunc))
+	level.Info(logger).Log("scrapers","Metrics register from scrapers")
+
 	if *metricsPath != "/" && *metricsPath != ""  && *metricsPath!="query"{
 		landingConfig := web.LandingConfig{
 			Name:        "GaussDB Exporter",

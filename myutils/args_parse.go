@@ -71,7 +71,7 @@ var ctxShutdown, cancel = context.WithCancel(context.Background())
 
 func starthttp(wg *sync.WaitGroup, listenAddress string) {
 	srv := &http.Server{Addr: listenAddress}
-	http.HandleFunc("/ythmetrics", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-ctxShutdown.Done():
 			fmt.Println("ctxShutdown Done, exit")
