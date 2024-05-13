@@ -70,8 +70,9 @@ func dealArgs(listenAddress string) {
 var ctxShutdown, cancel = context.WithCancel(context.Background())
 
 func starthttp(wg *sync.WaitGroup, listenAddress string) {
-	srv := &http.Server{Addr: listenAddress}
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	srv := &http.Server{Addr: listenAddress,Handler: mux}
+	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-ctxShutdown.Done():
 			fmt.Println("ctxShutdown Done, exit")
@@ -83,7 +84,7 @@ func starthttp(wg *sync.WaitGroup, listenAddress string) {
 		fmt.Printf("收到url参数: %v\n", string(vars.Encode()))
 		ip := vars.Get("ip")
 		port := vars.Get("port")
-		database := vars.Get("database")
+		database := vars.Get("dbname")
 		user, _ := DesDecrypt(vars.Get("user"), getdefaultkey(), "")
 		password, _ := DesDecrypt(vars.Get("password"), getdefaultkey(), "")
 

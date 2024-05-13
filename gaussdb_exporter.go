@@ -28,7 +28,7 @@ var (
 	metricsPath = kingpin.Flag(
 		"web.telemetry-path",
 		"Path under which to expose metrics.",
-	).Default("/gaussdb/metrics").String()
+	).Default("/metrics").String()
 
 	timeoutOffset = kingpin.Flag(
 		"timeout-offset",
@@ -157,9 +157,7 @@ func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFun
 		filteredScrapers := filterScrapers(scrapers, collect)
 
 		registry := prometheus.NewRegistry()
-
 		registry.MustRegister(collector.New(ctx, dsn.String(), filteredScrapers, logger))
-
 		gatherers := prometheus.Gatherers{
 			prometheus.DefaultGatherer,
 			registry,
@@ -170,29 +168,7 @@ func newHandler(scrapers []collector.Scraper, logger log.Logger) http.HandlerFun
 	}
 }
 
-
-func main() {
-
-	scraperFlags := map[collector.Scraper] *bool{}
-	for scraper,enableByDefault := range scrapers {
-		defaultOn := "false"
-		if enableByDefault {
-			defaultOn = "true"
-		}
-		f := kingpin.Flag (
-			"collect." + scraper.Name(),
-			scraper.Help(),
-		).Default(defaultOn).Bool()
-
-		scraperFlags[scraper] = f
-
-	}
-
-	promlogConfig := &promlog.Config{}
-	kingpin.Version(version.Print("gaussdb_exporter"))
-	kingpin.HelpFlag.Short('h')
-	kingpin.Parse()
-	logger := promlog.New(promlogConfig)
+func getAuthInformation(logger log.Logger){
 
 	if fi,err := os.Stat("HISTORY");err == nil || os.IsExist(err) {
 		level.Info(logger).Log("监测到HISTORY文件，执行新模式")
@@ -220,17 +196,38 @@ func main() {
 
 	} else {
 		level.Error(logger).Log("未监测到部署文件，不做任何改动，当前行为与官方包一致")
-
 		var err error
 		if err = c.ReloadConfig(*configGaussDB,logger); err != nil {
 			level.Info(logger).Log("msg", "Error parsing host config", "file", *configGaussDB, "err", err)
 		}
 	}
+}
+
+func main() {
+	scraperFlags := map[collector.Scraper] *bool{}
+	for scraper,enableByDefault := range scrapers {
+		defaultOn := "false"
+		if enableByDefault {
+			defaultOn = "true"
+		}
+		f := kingpin.Flag (
+			"collect." + scraper.Name(),
+			scraper.Help(),
+		).Default(defaultOn).Bool()
+
+		scraperFlags[scraper] = f
+
+	}
+
+	promlogConfig := &promlog.Config{}
+	kingpin.Version(version.Print("gaussdb_exporter"))
+	kingpin.HelpFlag.Short('h')
+	kingpin.Parse()
+	logger := promlog.New(promlogConfig)
+
+	getAuthInformation(logger)
 
 	level.Info(logger).Log("Debug","Hello world")
-
-
-
 	level.Info(logger).Log("msg","Starting gaussDB_exporter","version",version.Info())
 	level.Info(logger).Log("msg","Build context","build_context",version.BuildContext())
 
@@ -242,6 +239,7 @@ func main() {
 			enabledScrapers = append(enabledScrapers, scraper)
 		}
 	}
+
 	handlerFunc := newHandler(enabledScrapers, logger)
 	http.Handle(*metricsPath, promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, handlerFunc))
 	level.Info(logger).Log("scrapers","Metrics register from scrapers")
